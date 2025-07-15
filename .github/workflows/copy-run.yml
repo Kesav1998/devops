@@ -24,13 +24,17 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      # Ensure the target directory exists on EC2
+      - name: Ensure target directory exists
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/target-folder"
+
       # Copy the updated python.py to your EC2 instance
       - name: Copy python.py to EC2
         run: |
-          scp -i ~/.ssh/id_rsa python.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/target-folder/
+          scp -i ~/.ssh/id_rsa python.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/target-folder/
 
       # Run python.py on your EC2 instance
       - name: Run python.py on EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "python3 /home/ec2-user/target-folder/python.py"
-
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "python3 ~/target-folder/python.py"
