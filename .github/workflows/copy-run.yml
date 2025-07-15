@@ -1,0 +1,36 @@
+name: Copy and Run python.py on EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - python.py  # Only trigger if python.py is updated
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the latest code from GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up SSH to allow GitHub to access your EC2 instance
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      # Copy the updated python.py to your EC2 instance
+      - name: Copy python.py to EC2
+        run: |
+          scp -i ~/.ssh/id_rsa python.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ec2-user/target-folder/
+
+      # Run python.py on your EC2 instance
+      - name: Run python.py on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "python3 /home/ec2-user/target-folder/python.py"
+
